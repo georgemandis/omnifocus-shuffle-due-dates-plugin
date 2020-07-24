@@ -1,0 +1,38 @@
+/*{
+    "author": "George Mandis",
+    "targets": ["omnifocus"],
+    "type": "action",
+    "identifier": "com.snaptortoise.Shuffle Due Dates",
+    "version": "0.1",
+    "description": "A plug-in that...",
+    "label": "Shuffle Due Dates",
+    "mediumLabel": "Shuffle Due Dates",
+    "paletteLabel": "Shuffle Due Dates",
+}*/
+(() => {
+  const action = new PlugIn.Action(function (selection) {
+    console.log("!");
+    // Change due date for each task or project
+    selection.tasks.forEach((task) => {
+      task.dueDate = newDueDate();
+    });
+
+    selection.projects.forEach((project) => {
+      project.dueDate = newDueDate();
+    });
+  });
+
+  // random time in the next 5-35 days (default)
+  const newDueDate = (lowerBounds = 5, upperBounds = 30) => {
+    return new Date(
+      Date.now() +
+        1000 * 60 * 60 * 24 * (Math.random() * upperBounds + lowerBounds)
+    );
+  };
+
+  action.validate = function (selection) {
+    return !!selection.tasks.length || !!selection.projects.length;
+  };
+
+  return action;
+})();
