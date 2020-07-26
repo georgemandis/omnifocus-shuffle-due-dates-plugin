@@ -3,32 +3,80 @@
     "targets": ["omnifocus"],
     "type": "action",
     "identifier": "com.snaptortoise.Shuffle Due Dates",
-    "version": "0.1",
-    "description": "A plug-in that...",
+    "version": "0.2",
+    "description": "A plug-in that randomly assigns due dates to selected tasks and projects",
     "label": "Shuffle Due Dates",
     "mediumLabel": "Shuffle Due Dates",
     "paletteLabel": "Shuffle Due Dates",
 }*/
 (() => {
-  const action = new PlugIn.Action(function (selection) {
-    // Change due date for each task or project
-    selection.tasks.forEach((task) => {
-      task.dueDate = newDueDate();
-    });
+  // store end/start date here to remember previous choices
+  let settings = {};
 
-    selection.projects.forEach((project) => {
-      project.dueDate = newDueDate();
+  const action = new PlugIn.Action(function (selection) {
+    // extract start/end dates from previous selections
+    let { startDate, endDate } = settings;
+
+    // create the fields for the form
+    const startDateField = new Form.Field.Date(
+      "startDate",
+      "Min Due Date",
+      startDate ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
+    );
+
+    const endDateField = new Form.Field.Date(
+      "endDate",
+      "Max Due Date",
+      endDate ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
+    );
+
+    // create the form prompt and add the fields
+    const inputForm = new Form();
+    inputForm.addField(startDateField);
+    inputForm.addField(endDateField);
+
+    const formPrompt =
+      "Assign random due dates for selected tasks and projects between the following dates:";
+    const buttonTitle = "Shuffle Away!";
+
+    // make sure dates are formatted correctly and that min is <= max
+    inputForm.validate = function (formObject) {    
+      return (
+        !isNaN(formObject.values["startDate"]) &&
+        !isNaN(formObject.values["endDate"]) &&
+        formObject.values["startDate"] <= formObject.values["endDate"]
+      );
+    };
+
+    // render the form, store the new min/max dates to settings and
+    // randomize the due dates for the selected tasks and projects
+    inputForm.show(formPrompt, buttonTitle).then((formObject) => {
+      const chosenStartDate = formObject.values["startDate"];
+      const chosenEndDate = formObject.values["endDate"];
+
+      settings = {
+        startDate: chosenStartDate,
+        endDate: chosenEndDate,
+      };
+
+      // change due date for each task or project
+      selection.tasks.forEach((task) => {
+        task.dueDate = newDueDate();
+      });
+
+      selection.projects.forEach((project) => {
+        project.dueDate = newDueDate();
+      });
     });
   });
 
-  // random time in the next 5-35 days (default)
-  const newDueDate = (lowerBounds = 5, upperBounds = 30) => {
-    return new Date(
-      Date.now() +
-        1000 * 60 * 60 * 24 * (Math.random() * upperBounds + lowerBounds)
-    );
+  // method to return random date between min and max dates stored in settings
+  const newDueDate = () => {
+    const range = settings.endDate - settings.startDate;
+    return new Date(settings.startDate.getTime() + Math.random() * range);
   };
 
+  // only run the action is there are tasks or projects selected
   action.validate = function (selection) {
     return !!selection.tasks.length || !!selection.projects.length;
   };
