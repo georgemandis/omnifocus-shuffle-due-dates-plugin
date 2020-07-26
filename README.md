@@ -8,3 +8,15 @@ Read more about automation and OmniFocus here:
 [https://omni-automation.com/omnifocus/](https://omni-automation.com/omnifocus)
 
 To install this just download the `.omnijs` file and double-click it. It should open in OmniFocus automatically.
+
+
+## Release Notes
+
+### 0.2
+
+Added an input form that lets you specify the min/max dates to randomly shuffle due dates between. Defaults to between 1 week and 1 month out, but these can be changed and remembered throughout the same session.
+
+
+### 0.1
+
+Initial release!
